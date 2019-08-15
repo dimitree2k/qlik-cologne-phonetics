@@ -1,0 +1,158 @@
+SUB CPCode(vInput)
+
+    LET vInput = lower('$(vInput)');
+	LET vOutput = Null();
+    LET vCode = Null();
+    LET vLength = len(vInput);
+
+    FOR vCharPosition = 1 to vLength
+    
+        LET vChar = mid(vInput, vCharPosition, 1);
+
+        LET vChar = Replace('$(vChar)','ü','ue');
+        LET vChar = Replace('$(vChar)','ö','oe');
+        LET vChar = Replace('$(vChar)','ä','ae');
+        LET vChar = Replace('$(vChar)','ß','s');
+        LET vChar = Replace('$(vChar)','é','e');
+        LET vChar = Replace('$(vChar)','è','e');
+        LET vChar = Replace('$(vChar)','á','a');
+        LET vChar = Replace('$(vChar)','à','a');
+        LET vChar = Replace('$(vChar)','v','f');
+        LET vChar = Replace('$(vChar)','w','f');
+        LET vChar = Replace('$(vChar)','j','i');
+        LET vChar = Replace('$(vChar)','y','i');
+        LET vChar = Replace('$(vChar)','ph','f');
+        LET vChar = Replace('$(vChar)','ç','c');
+
+        LET vOutput = '$(vOutput)'&'$(vChar)';
+
+    Next vCharPosition;
+
+    // Das Wort nur aus einem Buchstaben?
+    IF vLength = 1 THEN
+    	TRACE 'ein buchstabe only';
+        LET vOutput = '$(vOutput)'&'_';
+    END IF
+
+    // Anlautprüfung
+    IF left(vOutput,1)='c' THEN
+    	TRACE 'fängt mit C an';
+        IF Index(mid(vOutput,2,1), 'ahkloqrux')>0 THEN
+            LET vCode = vCode & '4';
+            TRACE 'zweiter Buchstabe ist ahkloqrux';
+        ELSE 
+            LET vCode = vCode & '8';
+        END IF;
+        LET vStartChar = 2;
+    ELSE
+        LET vStartChar = 1;
+    END IF;
+    
+    LET vLength = len(vOutput);
+
+    DO WHILE vStartChar <= vLength
+
+        IF Index('aeiou', mid(vOutput,vStartChar,1))>0 THEN
+            LET vCode = vCode & '0';
+        END IF;
+
+        IF Index('bp', mid(vOutput,vStartChar,1))>0 THEN
+            LET vCode = vCode & '1';
+        END IF;
+
+        IF Index('dt', mid(vOutput,vStartChar,1))>0 THEN
+            IF vStartChar <= vLength THEN 
+                IF Index('csz', mid(vOutput,vStartChar+1,1))>0 THEN
+                    LET vCode = vCode & '8';
+                ELSE
+                    LET vCode = vCode & '2';
+                END IF;
+            ELSE
+                LET vCode = vCode & '2';
+            END IF;
+        END IF;    
+
+        IF Index('f', mid(vOutput,vStartChar,1))>0 THEN
+            LET vCode = vCode & '3';
+        END IF;
+
+        IF Index('gkq', mid(vOutput,vStartChar,1))>0 THEN
+            LET vCode = vCode & '4';
+        END IF;
+
+        IF Index('c', mid(vOutput,vStartChar,1))>0 THEN
+            IF vStartChar <= vLength THEN 
+                IF Index('ahkoqux', mid(vOutput,vStartChar+1,1))>0 THEN
+                    IF Index('sz', mid(vOutput,vStartChar-1,1))>0 THEN
+                        LET vCode = vCode & '8';
+                    ELSE
+                        LET vCode = vCode & '4';
+                    END IF;
+                ELSE
+                    LET vCode = vCode & '8';
+                END IF;
+            ELSE
+                LET vCode = vCode & '8';
+            END IF;
+        END IF;    
+
+        IF Index('x', mid(vOutput,vStartChar,1))>0 THEN
+            IF vStartChar <= vLength THEN 
+                IF Index('ckx', mid(vOutput,vStartChar-1,1))>0 THEN
+                    LET vCode = vCode & '8';
+                ELSE
+                    LET vCode = vCode & '48';
+                END IF;
+            ELSE
+                LET vCode = vCode & '48';
+            END IF;
+        END IF;    
+
+        IF Index('l', mid(vOutput,vStartChar,1))>0 THEN
+            LET vCode = vCode & '5';
+        END IF;
+
+        IF Index('mn', mid(vOutput,vStartChar,1))>0 THEN
+            LET vCode = vCode & '6';
+        END IF;
+
+        IF Index('r', mid(vOutput,vStartChar,1))>0 THEN
+            LET vCode = vCode & '7';
+        END IF;
+        
+        IF Index('sz', mid(vOutput,vStartChar,1))>0 THEN
+            LET vCode = vCode & '8';
+        END IF;
+
+        LET vStartChar = vStartChar +1;
+
+    LOOP
+
+    LET vStartChar = 1;
+    LET vLength = len(vCode);
+    LET vCPCode = Null();
+    LET vWord = Null();
+
+    DO WHILE vStartChar <= vLength
+
+        IF mid(vCode,vStartChar,1)<>0 THEN
+            IF mid(vCode,vStartChar,1)<>vWord THEN
+                LET vCPCode = vCPCode & mid(vCode,vStartChar,1);
+            END IF;
+            LET vWord = mid(vCode,vStartChar,1);
+        END IF;
+        LET vStartChar = vStartChar +1;
+
+    LOOP
+
+    IF left(vCode, 1)='0' THEN
+        LET vCPCode = '0' & vCPCode;
+    END IF;
+
+END SUB;
+
+// Aufruf
+
+Call CPCode('Müller');
+
+TRACE $(vCPCode);
